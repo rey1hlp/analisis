@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Cuestionario KDD - Análisis de Datos PUCP</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #1f2937;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    overflow: hidden;
+  }
+  header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+  }
+  header h1 { font-size: 1.8em; margin-bottom: 8px; }
+  header p { opacity: 0.9; font-size: 0.95em; }
+
+  .menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 20px;
+    background: #f3f4f6;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .menu button {
+    flex: 1 1 auto;
+    min-width: 140px;
+    padding: 10px 14px;
+    border: 2px solid #2563eb;
+    background: white;
+    color: #2563eb;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85em;
+    transition: all 0.2s;
+  }
+  .menu button:hover { background: #dbeafe; }
+  .menu button.active {
+    background: #2563eb;
+    color: white;
+  }
+
+  .content { padding: 30px; }
+  .step-title {
+    font-size: 1.4em;
+    color: #1e3a8a;
+    margin-bottom: 6px;
+    border-bottom: 3px solid #2563eb;
+    padding-bottom: 8px;
+  }
+  .step-desc {
+    color: #6b7280;
+    font-size: 0.9em;
+    margin-bottom: 24px;
+    font-style: italic;
+  }
+
+  .question {
+    background: #f9fafb;
+    border-left: 4px solid #2563eb;
+    border-radius: 8px;
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+  .question h3 {
+    font-size: 1em;
+    color: #1f2937;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.9em;
+  }
+  .option:hover { border-color: #93c5fd; background: #eff6ff; }
+  .option input { margin-top: 3px; cursor: pointer; }
+  .option.correct { background: #d1fae5; border-color: #10b981; }
+  .option.incorrect { background: #fee2e2; border-color: #ef4444; }
+  .option.disabled { cursor: not-allowed; }
+
+  .feedback {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.ok { background: #d1fae5; color: #065f46; }
+  .feedback.bad { background: #fee2e2; color: #991b1b; }
+
+  .actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+  }
+  .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: #2563eb; color: white; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-secondary { background: #e5e7eb; color: #374151; }
+  .btn-secondary:hover { background: #d1d5db; }
+
+  .score-box {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    margin-top: 20px;
+    display: none;
+  }
+  .score-box.show { display: block; }
+  .score-box .big { font-size: 2.5em; font-weight: bold; }
+
+  footer {
+    background: #1e3a8a;
+    color: white;
+    text-align: center;
+    padding: 15px;
+    font-size: 0.85em;
+    opacity: 0.9;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🧠 Cuestionario KDD</h1>
+    <p>Análisis de Datos · 1INF03 · PUCP</p>
+  </header>
+
+  <div class="menu" id="menu"></div>
+
+  <div class="content">
+    <h2 class="step-title" id="stepTitle"></h2>
+    <p class="step-desc" id="stepDesc"></p>
+    <div id="questions"></div>
+
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="prevStep()">← Anterior</button>
+      <span id="stepIndicator" style="color:#6b7280;font-size:0.9em;"></span>
+      <button class="btn btn-secondary" onclick="nextStep()">Siguiente →</button>
+    </div>
+
+    <div class="score-box" id="scoreBox">
+      <div>Puntaje total</div>
+      <div class="big" id="scoreValue">0 / 0</div>
+      <div id="scoreMsg" style="margin-top:8px;font-size:0.9em;"></div>
+    </div>
+  </div>
+
+  <footer>Elaborado a partir de los PDFs del curso 1INF03 · Semana 1 a 6</footer>
+</div>
+
+<script>
+const quiz = [
+  {
+    title: "Step 1: Entendimiento del Negocio",
+    desc: "Definir el problema, objetivos, población, recursos y limitaciones.",
+    questions: [
+      { q: "¿Cuál es el OUTPUT del Step 1 según el PDF?", options: ["Ficha técnica del proyecto de análisis de datos", "Dataset limpio", "Modelo entrenado", "Reporte de outliers"], correct: 0 },
+      { q: "Según Kerlinger y Lee (2002), un problema de investigación debe...", options: ["Expresar relación entre 2+ variables, formularse como pregunta y ser empíricamente contrastable", "Ser breve y sin variables", "Solo describir un fenómeno", "No requerir datos"], correct: 0 },
+      { q: "¿Qué criterio NO corresponde a la delimitación de la población de análisis?", options: ["Criterios de inclusión", "Criterios de exclusión", "Criterios de eliminación", "Criterios de imputación"], correct: 3 },
+      { q: "En el ejemplo del Kinesio Taping, ¿qué representa 'n=19'?", options: ["Participantes que terminan el estudio", "Participantes elegibles iniciales", "Participantes excluidos", "Total de la población mundial"], correct: 0 },
+      { q: "¿Cuál es una limitación respecto a DATOS?", options: ["Restricciones de tiempo", "Acceso a toda la población definida", "Normativas institucionales", "Poder de acción"], correct: 1 },
+      { q: "¿Qué recurso se refiere a 'entorno para entrenamiento de modelos'?", options: ["Personas", "Datos", "Herramientas", "Limitaciones"], correct: 2 }
+    ]
+  },
+  {
+    title: "Step 2: Selección y Entendimiento de Datos",
+    desc: "Estructurados vs no estructurados, tipos de variables, medidas de resumen.",
+    questions: [
+      { q: "¿Qué porcentaje aproximado de los datos empresariales son NO estructurados según Gartner?", options: ["20%", "50%", "80%", "100%"], correct: 2 },
+      { q: "¿Cuál NO es una variable según su escala de medida?", options: ["Nominal", "Ordinal", "De intervalo", "Booleana"], correct: 3 },
+      { q: "La mediana divide a las observaciones en...", options: ["2 partes iguales", "4 partes iguales", "10 partes iguales", "100 partes iguales"], correct: 0 },
+      { q: "Si AS < 0, la distribución es...", options: ["Simétrica", "Asimétrica hacia la izquierda", "Asimétrica hacia la derecha", "Uniforme"], correct: 1 },
+      { q: "La curtosis mide...", options: ["La simetría", "El apuntamiento o deformación vertical", "La media", "El rango"], correct: 1 },
+      { q: "Un coeficiente de variación MENOR indica...", options: ["Mayor dispersión", "Menor homogeneidad", "Mayor homogeneidad", "Nada relevante"], correct: 2 },
+      { q: "¿Qué tipo de dato es 'color de ojos'?", options: ["Cuantitativo continuo", "Cualitativo nominal", "Cualitativo ordinal", "Cuantitativo discreto"], correct: 1 }
+    ]
+  },
+  {
+    title: "Step 3: Preprocesamiento - Limpieza",
+    desc: "Duplicados, vacíos, faltantes (MCAR/MAR/MNAR), atípicos y escalado.",
+    questions: [
+      { q: "¿Qué tipo de missing data es el MÁS problemático?", options: ["MCAR", "MAR", "MNAR", "Ninguno"], correct: 2 },
+      { q: "En MCAR, ¿cuál NO es una solución típica?", options: ["Eliminar filas", "Eliminar columnas", "Imputación simple", "Heckman imputation"], correct: 3 },
+      { q: "En MNAR, una solución frecuente es...", options: ["Eliminar filas", "Imputar y añadir flag binario", "Ignorar el problema", "Reemplazar por media"], correct: 1 },
+      { q: "La normalización Min-Max lleva los datos a...", options: ["Media 0, desv 1", "Rango [0,1]", "Rango [-1,1]", "Cualquier rango"], correct: 1 },
+      { q: "La estandarización Z-score lleva los datos a...", options: ["Media 0, desv 1", "Rango [0,1]", "Rango [-1,1]", "Cualquier rango"], correct: 0 },
+      { q: "El capping con Z-score reemplaza outliers por valores en...", options: ["±1 desviación", "±2 desviaciones", "±3 desviaciones", "±5 desviaciones"], correct: 2 },
+      { q: "¿Cuál NO es una opción de tratamiento de atípicos?", options: ["Trimming", "Imputation", "Capping", "Duplicación"], correct: 3 },
+      { q: "¿Qué método de imputación usa K vecinos más cercanos?", options: ["Media", "Mediana", "KNN Imputation", "Moda"], correct: 2 }
+    ]
+  },
+  {
+    title: "Step 4: Reducción de Dimensiones (PCA y EFA)",
+    desc: "PCA, EFA, rotaciones, comunalidades, KMO, Bartlett.",
+    questions: [
+      { q: "En PCA, el primer componente principal...", options: ["Es ortogonal al segundo", "Captura la mínima varianza", "Es igual a la variable original", "No tiene autovalor"], correct: 0 },
+      { q: "¿Cuándo es INVIABLE el PCA?", options: ["Cuando hay correlación alta", "Cuando la matriz de correlaciones es la identidad", "Cuando hay muchas variables", "Cuando hay pocas observaciones"], correct: 1 },
+      { q: "La prueba de Bartlett tiene como H0...", options: ["Los datos son normales", "La matriz de correlaciones es la identidad", "Los factores son ortogonales", "No hay outliers"], correct: 1 },
+      { q: "Un KMO de 0.85 se clasifica como...", options: ["Marvelous", "Meritorious", "Middling", "Unacceptable"], correct: 1 },
+      { q: "En EFA, la comunalidad h² representa...", options: ["La varianza total", "El % de varianza de xj explicada por los factores", "La correlación entre factores", "El error de medición"], correct: 1 },
+      { q: "La rotación Varimax es...", options: ["Oblicua", "Ortogonal", "Diagonal", "No existe"], correct: 1 },
+      { q: "La rotación Oblimin...", options: ["Mantiene ortogonalidad", "Permite correlación entre factores", "Es idéntica a Varimax", "Solo aplica a PCA"], correct: 1 },
+      { q: "Para m=2 factores, ¿cuántas variables p se necesitan como mínimo?", options: ["3", "5", "7", "9"], correct: 1 },
+      { q: "El criterio de autovalor > 1 se usa para...", options: ["Detectar outliers", "Elegir número de componentes/factores", "Normalizar", "Calcular KMO"], correct: 1 },
+      { q: "¿Qué método de extracción de factores se recomienda por defecto en EFA?", options: ["PCA", "Máxima Verosimilitud (MV)", "Mínimos Cuadrados (MC)", "Componentes principales sin rotar"], correct: 1 }
+    ]
+  },
+  {
+    title: "Step 5 y 6: Selección de Métodos de D.M.",
+    desc: "Predictivo, descriptivo, optimización; supervisado vs no supervisado.",
+    questions: [
+      { q: "¿Cuál NO es una tarea de Data Mining según el PDF?", options: ["Predictive", "Descriptive", "Optimization", "Encryption"], correct: 3 },
+      { q: "Clustering pertenece a la categoría...", options: ["Predictive", "Descriptive", "Optimization", "Reinforcement"], correct: 1 },
+      { q: "Si el output del modelo es un número, es un problema de...", options: ["Clasificación", "Regresión", "Clustering", "Asociación"], correct: 1 },
+      { q: "Si el output es una clase pero NO se conoce el número de clases, es...", options: ["Clasificación", "Regresión", "Clustering", "Optimización"], correct: 2 },
+      { q: "¿Qué tipo de aprendizaje usa datos etiquetados?", options: ["No supervisado", "Supervisado", "Reinforcement", "Semi-supervisado"], correct: 1 },
+      { q: "¿Cuál es una técnica de optimización meta-heurística de enjambre?", options: ["Hill climbing", "Simulated annealing", "Particle swarm", "Tabu search"], correct: 2 },
+      { q: "K-Means es un método...", options: ["Supervisado de clasificación", "No supervisado de clustering", "De regresión", "De optimización"], correct: 1 },
+      { q: "Para variables categóricas en no supervisado, se usa típicamente...", options: ["Regresión lineal", "K-Means puro", "Association Analysis (Apriori, FP-Growth)", "SVM"], correct: 2 }
+    ]
+  },
+  {
+    title: "Step 7a: Clustering - Métodos y K-Means",
+    desc: "Distancias, jerárquicos vs no jerárquicos, K-Means, silueta, Gower.",
+    questions: [
+      { q: "¿Qué distancia es más sensible a la escala de las variables?", options: ["Manhattan", "Euclidiana", "Gower", "Chebychev"], correct: 1 },
+      { q: "La distancia de Gower es útil cuando...", options: ["Solo hay numéricas", "Hay mezcla de numéricas y categóricas", "Hay outliers", "Hay pocas observaciones"], correct: 1 },
+      { q: "El linkage 'single' tiende a producir...", options: ["Clusters compactos", "Efecto cadena", "Clusters esféricos", "Nada"], correct: 1 },
+      { q: "El linkage 'ward' minimiza...", options: ["La distancia máxima", "La varianza interna", "La distancia mínima", "El número de clusters"], correct: 1 },
+      { q: "AGNES es un algoritmo jerárquico...", options: ["Divisivo", "Aglomerativo", "Particional", "Basado en densidad"], correct: 1 },
+      { q: "DIANA es un algoritmo jerárquico...", options: ["Divisivo", "Aglomerativo", "Particional", "Basado en densidad"], correct: 0 },
+      { q: "El coeficiente de aglomeración AC se acerca a 1 cuando...", options: ["No hay estructura", "Hay estructura clara de conglomerados", "Hay outliers", "Hay pocas variables"], correct: 1 },
+      { q: "K-Means es sensible a...", options: ["La elección de centroides iniciales y outliers", "Solo a outliers", "Solo a la escala", "Nada"], correct: 0 },
+      { q: "En K-Means, el centroide se calcula como...", options: ["La mediana", "El vector de medias", "La moda", "El valor máximo"], correct: 1 },
+      { q: "La silueta varía entre...", options: ["0 y 1", "-1 y 1", "-1 y 0", "0 y 100"], correct: 1 },
+      { q: "Un valor de silueta cercano a -1 indica...", options: ["Excelente asignación", "Asignación incorrecta", "Cluster vacío", "Nada"], correct: 1 },
+      { q: "PAM se basa en...", options: ["Centroides", "Medoides", "Densidad", "Jerarquía"], correct: 1 },
+      { q: "CLARA se usa cuando...", options: ["Pocos datos", "Muchos datos (PAM sería impráctico)", "Solo categóricas", "Solo 2 variables"], correct: 1 },
+      { q: "FANNY implementa clustering...", options: ["Duro", "Difuso (fuzzy)", "Jerárquico", "Basado en densidad"], correct: 1 },
+      { q: "El índice de Dunn F_k toma valor 1 cuando...", options: ["Es completamente difuso", "Es una partición dura", "No hay clusters", "Hay 2 clusters"], correct: 1 },
+      { q: "En K-Prototypes, el parámetro gamma controla...", options: ["El número de clusters", "El peso de las variables categóricas", "Las iteraciones", "La semilla"], correct: 1 }
+    ]
+  },
+  {
+    title: "Step 7b: Evaluación de Clustering",
+    desc: "Inercia, silhouette, ARI, estabilidad, Gower.",
+    questions: [
+      { q: "La inercia en K-Means mide...", options: ["La separación entre clusters", "La suma de distancias al cuadrado al centroide", "La correlación", "Nada"], correct: 1 },
+      { q: "Sklearn reporta la inercia como negativa porque...", options: ["Es un error", "Para que 'mayor sea mejor'", "Para normalizar", "Para evitar overflow"], correct: 1 },
+      { q: "El ARI (Adjusted Rand Index) varía entre...", options: ["0 y 1", "-1 y 1", "-1 y 0", "0 y 100"], correct: 1 },
+      { q: "Un ARI cercano a 1 entre dos semillas indica...", options: ["Inestabilidad", "Alta estabilidad del modelo", "Mal clustering", "Nada"], correct: 1 },
+      { q: "Para comparar clusters de distintos algoritmos con una métrica común se usa...", options: ["Inercia", "Silhouette con distancia Gower", "Accuracy", "R²"], correct: 1 },
+      { q: "El método del codo busca...", options: ["El K con mayor inercia", "El punto de inflexión donde la inercia deja de bajar bruscamente", "El K=1", "El K máximo"], correct: 1 },
+      { q: "Un silhouette promedio de 0.35 en k=3 vs 0.28 en k=4 indica que...", options: ["k=4 es mejor", "k=3 es mejor según silhouette", "Ambos iguales", "Ninguno sirve"], correct: 1 },
+      { q: "El coeficiente de aglomeración NO debe usarse para comparar datasets de distinto tamaño porque...", options: ["Es inestable", "Tiende a crecer con n", "No existe", "Solo aplica a K-Means"], correct: 1 }
+    ]
+  }
+];
+
+let currentStep = 0;
+let userAnswers = {}; // {stepIdx: {qIdx: optionIdx}}
+
+// ---------- Render ----------
+function renderMenu() {
+  const menu = document.getElementById('menu');
+  menu.innerHTML = '';
+  quiz.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = s.title.split(':')[0];
+    if (i === currentStep) btn.classList.add('active');
+    btn.onclick = () => { currentStep = i; renderStep(); };
+    menu.appendChild(btn);
+  });
+}
+
+function renderStep() {
+  const step = quiz[currentStep];
+  document.getElementById('stepTitle').textContent = step.title;
+  document.getElementById('stepDesc').textContent = step.desc;
+  document.getElementById('stepIndicator').textContent = `Paso ${currentStep + 1} de ${quiz.length}`;
+
+  // Inicializar respuestas del step si no existen
+  if (!userAnswers[currentStep]) userAnswers[currentStep] = {};
+
+  const container = document.getElementById('questions');
+  container.innerHTML = '';
+
+  step.questions.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'question';
+    const h3 = document.createElement('h3');
+    h3.textContent = `${qi + 1}. ${q.q}`;
+    div.appendChild(h3);
+
+    const opts = document.createElement('div');
+    opts.className = 'options';
+
+    q.options.forEach((opt, oi) => {
+      const label = document.createElement('label');
+      label.className = 'option';
+      const input = document.createElement('input');
+      input.type = 'radio';
+      input.name = `q_${currentStep}_${qi}`;
+      input.value = oi;
+      if (userAnswers[currentStep][qi] === oi) input.checked = true;
+
+      input.onchange = () => {
+        userAnswers[currentStep][qi] = oi;
+        // Feedback inmediato
+        const fb = div.querySelector('.feedback');
+        if (oi === q.correct) {
+          fb.className = 'feedback show ok';
+          fb.textContent = '✅ ¡Correcto!';
+        } else {
+          fb.className = 'feedback show bad';
+          fb.textContent = `❌ Incorrecto. La respuesta correcta es: ${q.options[q.correct]}`;
+        }
+        // Marcar visualmente
+        opts.querySelectorAll('.option').forEach((el, idx) => {
+          el.classList.remove('correct', 'incorrect');
+          if (idx === q.correct) el.classList.add('correct');
+          else if (idx === oi) el.classList.add('incorrect');
+        });
+      };
+
+      const span = document.createElement('span');
+      span.textContent = opt;
+      label.appendChild(input);
+      label.appendChild(span);
+      opts.appendChild(label);
+    });
+
+    div.appendChild(opts);
+
+    const fb = document.createElement('div');
+    fb.className = 'feedback';
+    // Si ya respondió antes, restaurar feedback
+    if (userAnswers[currentStep][qi] !== undefined) {
+      const chosen = userAnswers[currentStep][qi];
+      if (chosen === q.correct) {
+        fb.className = 'feedback show ok';
+        fb.textContent = '✅ ¡Correcto!';
+      } else {
+        fb.className = 'feedback show bad';
+        fb.textContent = `❌ Incorrecto. La respuesta correcta es: ${q.options[q.correct]}`;
+      }
+      // Re-marcar opciones
+      setTimeout(() => {
+        const labels = opts.querySelectorAll('.option');
+        labels.forEach((el, idx) => {
+          if (idx === q.correct) el.classList.add('correct');
+          else if (idx === chosen) el.classList.add('incorrect');
+        });
+      }, 0);
+    }
+    div.appendChild(fb);
+
+    container.appendChild(div);
+  });
+
+  renderMenu();
+  updateScore();
+}
+
+function prevStep() {
+  if (currentStep > 0) { currentStep--; renderStep(); }
+}
+function nextStep() {
+  if (currentStep < quiz.length - 1) { currentStep++; renderStep(); }
+  else { showFinalScore(); }
+}
+
+function updateScore() {
+  let total = 0, correct = 0;
+  quiz.forEach((s, si) => {
+    s.questions.forEach((q, qi) => {
+      total++;
+      if (userAnswers[si] && userAnswers[si][qi] === q.correct) correct++;
+    });
+  });
+  document.getElementById('scoreValue').textContent = `${correct} / ${total}`;
+  document.getElementById('scoreBox').classList.add('show');
+  const pct = total ? Math.round(correct / total * 100) : 0;
+  let msg = '';
+  if (pct >= 90) msg = '🌟 ¡Excelente! Dominas el tema.';
+  else if (pct >= 70) msg = '👍 Buen trabajo, repasa los errores.';
+  else if (pct >= 50) msg = '📚 Vas por buen camino, refuerza los conceptos.';
+  else msg = '💪 Necesitas repasar los PDFs con más detalle.';
+  document.getElementById('scoreMsg').textContent = msg;
+}
+
+function showFinalScore() {
+  updateScore();
+  document.getElementById('scoreBox').scrollIntoView({behavior: 'smooth'});
+  alert('¡Has terminado el cuestionario! Revisa tu puntaje abajo.');
+}
+
+// ---------- Init ----------
+renderStep();
+</script>
+</body>
+</html>
